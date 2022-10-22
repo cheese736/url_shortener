@@ -2,6 +2,7 @@
 const express = require('express')
 const exphbs = require('express-handlebars')
 const app = express()
+const homepage = 'http://localhost:3000/'
 const Url = require('./models/url')
 const generateRandomCharacters = require('./models/shorten')
 const copyToClipboard = require('./models/copy_to_clipboard')
@@ -32,14 +33,35 @@ app.get('/', (req, res) => {
 
 app.post('/result', (req,res) => {
   const origin = req.body.url
-  console.log(origin)
-  const short = generateRandomCharacters(5)
-  console.log(short)
-  Url.create({
-    origin,
-    short
+  Url.findOne({origin: origin})
+  .then((result) => {
+    // 如果來源網址已經存在在資料庫內，回傳該筆縮短結果
+    if (result !== null) {
+      const short = result.short
+      return short
+    } else {
+      const short = generateRandomCharacters(5)
+      Url.create({
+        origin,
+        short
+      })
+      return short
+    }
   })
-  res.render('result', {shortenedUrl: short})
+  .then(short => res.render('result', {shortenedUrl: short, home: homepage}))
+})
+
+app.get('/:short', (req,res) => {
+  const short = req.params.short
+  Url.findOne({short: short})
+  .then(result => {
+    if (result !== null) {
+      const origin = result.origin
+      return origin
+    }
+  })
+  .then(origin => res.redirect(origin))
+  
 })
 
 // 設定 port 3000
