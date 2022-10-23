@@ -4,7 +4,7 @@ const Url = require('../../models/url')
 const generateRandomCharacters = require('../../models/shorten')
 const homepage = 'http://localhost:3000/'
 
-router.post('/result', (req,res) => {
+router.post('/', (req,res) => {
   const origin = req.body.url
   Url.findOne({origin: origin})
   .then((result) => {
@@ -12,6 +12,7 @@ router.post('/result', (req,res) => {
     if (result !== null) {
       const short = result.short
       return short
+    // 若無則新創一筆資料
     } else {
       const short = generateRandomCharacters(5)
       Url.create({
@@ -22,6 +23,7 @@ router.post('/result', (req,res) => {
     }
   })
   .then(short => res.render('result', {shortenedUrl: short, home: homepage}))
+  .catch(error => console.log(error))
 })
 
 module.exports = router
